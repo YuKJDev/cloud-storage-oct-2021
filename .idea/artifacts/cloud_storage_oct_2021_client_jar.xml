@@ -1,0 +1,23 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="cloud-storage-oct-2021-client:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/cloud_storage_oct_2021_client_jar</output-path>
+    <root id="archive" name="cloud-storage-oct-2021-client_jar.jar">
+      <element id="archive" name="cloud-storage-oct-2021-client.jar">
+        <element id="directory" name="META-INF">
+          <element id="file-copy" path="$PROJECT_DIR$/cloud-storage-oct-2021-client/src/main/java/META-INF/MANIFEST.MF" />
+        </element>
+        <element id="module-output" name="cloud-storage-oct-2021-client" />
+      </element>
+      <element id="library" level="project" name="Maven: org.controlsfx:controlsfx:11.1.0" />
+      <element id="library" level="project" name="Maven: org.openjfx:javafx-fxml:17-ea+11" />
+      <element id="library" level="project" name="Maven: org.openjfx:javafx-controls:17-ea+11" />
+      <element id="library" level="project" name="Maven: org.openjfx:javafx-graphics:17-ea+11" />
+      <element id="library" level="project" name="Maven: org.openjfx:javafx-base:17-ea+11" />
+      <element id="library" level="project" name="Maven: org.openjfx:javafx-controls:linux:17-ea+11" />
+      <element id="library" level="project" name="Maven: org.openjfx:javafx-base:linux:17-ea+11" />
+      <element id="library" level="project" name="Maven: org.openjfx:javafx-fxml:linux:17-ea+11" />
+      <element id="library" level="project" name="Maven: org.openjfx:javafx-graphics:linux:17-ea+11" />
+      <element id="library" level="project" name="Maven: com.dlsc.formsfx:formsfx-core:11.4.2" />
+    </root>
+  </artifact>
+</component>
