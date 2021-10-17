@@ -101,7 +101,7 @@ public class ChatController implements Initializable {
 
     public void actionSend (){
       send.setOnAction((a -> {
-          String[] cmd = input.getText().split(" ");
+          String[] cmd = send.getText().split(" " + input.getText());
           if (cmd[0].equals("upload")) {
               sendFile(cmd[1]);
           }
