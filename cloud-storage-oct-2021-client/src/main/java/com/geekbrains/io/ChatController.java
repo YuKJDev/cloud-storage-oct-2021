@@ -53,9 +53,10 @@ public class ChatController implements Initializable {
 
     private void sendFile(String fileName) {
         try {
+
             dos.writeUTF("upload");
             dos.writeUTF(fileName);
-            File file = new File("client" + File.separator +"root_folder" + File.separator + fileName);
+            File file = new File("client" + File.separator +"root" + File.separator + fileName);
             if (!file.exists()) {
                 System.out.println("File is not exist");
                 dos.writeUTF("File is not exist");
@@ -64,7 +65,7 @@ public class ChatController implements Initializable {
             dos.writeLong(length);
             FileInputStream fileBytes = new FileInputStream(file);
             int read = 0;
-            byte[] buffer = new byte[256];
+            byte[] buffer = new byte[1024];
             while ((read = fileBytes.read(buffer)) != -1) {
                 dos.write(buffer, 0, read);
             }
@@ -77,15 +78,16 @@ public class ChatController implements Initializable {
 
     private void getFile(String fileName) {
         try{
+
             dos.writeUTF("download");
             dos.writeUTF(fileName);
-            File file = new File("client" + File.separator +"root_folder" + File.separator + fileName);
+            File file = new File("client" + File.separator +"root" + File.separator + fileName);
             if (file.exists()) { file.delete();}
             file.createNewFile();
             long size = dis.readLong();
             FileOutputStream fos = new FileOutputStream(file);
-            byte[] buffer = new byte[256];
-            for (int i = 0; i < (size + 255) / 256; i++) {
+            byte[] buffer = new byte[1024];
+            for (int i = 0; i < (size + buffer.length - 1) / 1014; i++) {
                 int read = dis.read(buffer);
                 fos.write(buffer, 0, read);
             }
@@ -106,8 +108,17 @@ public class ChatController implements Initializable {
           if (cmd[0].equals("download")) {
               getFile(cmd[1]);
           }
+          else {
+              try {
+                  sendMessage(a);
+              } catch (IOException e) {
+                  e.printStackTrace();
+              }
+          }
           input.setText("");
+
       }));
+
     }
 
 
