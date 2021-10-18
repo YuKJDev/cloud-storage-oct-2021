@@ -3,6 +3,7 @@ package com.geekbrains.io;
 import java.io.*;
 import java.net.Socket;
 import java.net.URL;
+import java.util.Locale;
 import java.util.ResourceBundle;
 
 import javafx.application.Platform;
@@ -101,7 +102,9 @@ public class ChatController implements Initializable {
 
     public void actionSend (){
       send.setOnAction((a -> {
-          String[] cmd = send.getText().split(" " + input.getText());
+          String[] cmd = {send.getText().toLowerCase(), input.getText().toLowerCase()};
+          System.out.println(cmd[0]);
+          System.out.println(cmd[1]);
           if (cmd[0].equals("upload")) {
               sendFile(cmd[1]);
           }
