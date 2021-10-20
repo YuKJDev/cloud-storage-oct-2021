@@ -8,10 +8,18 @@ import java.util.ResourceBundle;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 public class ChatController implements Initializable {
 
@@ -57,7 +65,8 @@ public class ChatController implements Initializable {
 
             dos.writeUTF("upload");
             dos.writeUTF(fileName);
-            File file = new File("client" + File.separator +"root" + File.separator + fileName);
+
+            File file = new File(File.separator +"root" + File.separator + fileName);
             if (!file.exists()) {
                 System.out.println("File is not exist");
                 dos.writeUTF("File is not exist");
@@ -65,7 +74,7 @@ public class ChatController implements Initializable {
             long length = file.length();
             dos.writeLong(length);
             FileInputStream fileBytes = new FileInputStream(file);
-            int read = 0;
+            int read;
             byte[] buffer = new byte[1024];
             while ((read = fileBytes.read(buffer)) != -1) {
                 dos.write(buffer, 0, read);
@@ -82,8 +91,8 @@ public class ChatController implements Initializable {
 
             dos.writeUTF("download");
             dos.writeUTF(fileName);
-            File file = new File("client" + File.separator +"root" + File.separator + fileName);
-            if (file.exists()) { file.delete();}
+            File file = new File( File.separator +"root" + File.separator + fileName);
+            if (file.exists()) file.delete();
             file.createNewFile();
             long size = dis.readLong();
             FileOutputStream fos = new FileOutputStream(file);
@@ -100,32 +109,68 @@ public class ChatController implements Initializable {
     }
 
 
-    public void actionSend (){
-      send.setOnAction((a -> {
-          String[] cmd = {send.getText().toLowerCase(), input.getText().toLowerCase()};
-          System.out.println(cmd[0]);
-          System.out.println(cmd[1]);
-          if (cmd[0].equals("upload")) {
-              sendFile(cmd[1]);
-          }
-          if (cmd[0].equals("download")) {
-              getFile(cmd[1]);
-          }
-          else {
-              try {
-                  sendMessage(a);
-              } catch (IOException e) {
-                  e.printStackTrace();
-              }
-          }
-          input.setText("");
+    public void actionSend () {
+        input.setOnAction((a -> {
 
-      }));
+                final Stage dialogStage = new Stage();
+                dialogStage.initModality(Modality.WINDOW_MODAL);
 
+                Label exitLabel = new Label("Check a file");
+                exitLabel.setAlignment(Pos.BASELINE_CENTER);
+                Button yesBtn = new Button("Open");
+                yesBtn.setOnAction(new EventHandler<ActionEvent>() {
+
+                    @Override
+                    public void handle(ActionEvent actionEvent) {
+                        String[] cmd = input.getText().toLowerCase().split(" ");
+
+                        if (cmd[0].equals("upload")) {
+                            sendFile(cmd[1]);
+                        }
+                        if (cmd[0].equals("download")) {
+                            getFile(cmd[1]);
+                        } else {
+                            try {
+                                sendMessage(a);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        input.setText("");
+
+                    }
+                });
+                Button noBtn = new Button("Cancel");
+                noBtn.setOnAction(new EventHandler<ActionEvent>() {
+
+                    @Override
+                    public void handle(ActionEvent arg0) {
+                        dialogStage.close();
+
+                    }
+
+                });
+
+                HBox hBox = new HBox();
+                hBox.setAlignment(Pos.BASELINE_CENTER);
+                hBox.setSpacing(40.0);
+                hBox.getChildren().addAll(yesBtn, noBtn);
+
+                VBox vBox = new VBox();
+                vBox.setSpacing(40.0);
+                vBox.getChildren().addAll(exitLabel, hBox);
+
+                dialogStage.setScene(new Scene(vBox));
+                dialogStage.show();
+
+
+            }));
+
+        }
     }
 
 
-}
+
 
 
 
