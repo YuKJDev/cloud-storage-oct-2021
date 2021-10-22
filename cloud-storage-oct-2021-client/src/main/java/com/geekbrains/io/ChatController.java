@@ -3,8 +3,12 @@ package com.geekbrains.io;
 import java.io.*;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.file.Files;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -18,24 +22,26 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import java.nio.file.Path;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class ChatController implements Initializable {
 
     private static final int BUFFER_SIZE = 1024;
-
+    private Path root;
     public ListView<String> listView;
     public TextField input;
     public Button send;
     private DataInputStream dis;
     private DataOutputStream dos;
-
+    private byte[] buffer;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
             Socket socket = new Socket("localhost", 8189);
+            buffer = new byte[BUFFER_SIZE];
             dis = new DataInputStream(socket.getInputStream());
             dos = new DataOutputStream(socket.getOutputStream());
             Thread readThread = new Thread(() -> {
@@ -67,7 +73,6 @@ public class ChatController implements Initializable {
 
             dos.writeUTF("upload");
             dos.writeUTF(fileName);
-
             File file = new File(File.separator +"root" + File.separator + fileName);
             if (!file.exists()) {
                 System.out.println("File is not exist");
@@ -75,11 +80,12 @@ public class ChatController implements Initializable {
             }
             long length = file.length();
             dos.writeLong(length);
-            FileInputStream fileBytes = new FileInputStream(file);
-            int read;
-            byte[] buffer = new byte[BUFFER_SIZE];
-            while ((read = fileBytes.read(buffer)) != -1) {
-                dos.write(buffer, 0, read);
+            try (FileInputStream fileBytes = new FileInputStream(file)){
+
+                int read;
+                while ((read = fileBytes.read(buffer)) != -1) {
+                    dos.write(buffer, 0, read);
+                }
             }
             dos.flush();
             System.out.println(dis.readUTF());
@@ -87,6 +93,7 @@ public class ChatController implements Initializable {
             e.printStackTrace();
         }
     }
+
 
     private void getFile(String fileName){
 
@@ -98,14 +105,14 @@ public class ChatController implements Initializable {
             file.createNewFile();
 
             long size = dis.readLong();
-            FileOutputStream fos = new FileOutputStream(file);
-            byte[] buffer = new byte[BUFFER_SIZE];
-            for (int i = 0; i < (size + buffer.length - 1) / BUFFER_SIZE; i++) {
-                int read = dis.read(buffer);
-                fos.write(buffer, 0, read);
+            try (FileOutputStream fos = new FileOutputStream(file)) {
+                byte[] buffer = new byte[BUFFER_SIZE];
+                for (int i = 0; i < (size + buffer.length - 1) / BUFFER_SIZE; i++) {
+                    int read = dis.read(buffer);
+                    fos.write(buffer, 0, read);
+                }
+                System.out.println(dis.readUTF());
             }
-            System.out.println(dis.readUTF());
-            fos.close();
         }catch(IOException e){
             e.printStackTrace();
         }
@@ -171,6 +178,14 @@ public class ChatController implements Initializable {
         dialogStage.show();
 
 
+    }
+
+    private void fillFilesInView() throws Exception {
+        listView.getItems().clear();
+        List<String> list = Files.list(root)
+            .map (p -> p.getFileName().toString())
+            .collect(Collectors.toList());
+        listView.getItems().addAll(list);
     }
 }
 
