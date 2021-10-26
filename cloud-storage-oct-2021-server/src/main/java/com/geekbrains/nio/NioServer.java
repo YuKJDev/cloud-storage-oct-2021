@@ -1,6 +1,9 @@
 package com.geekbrains.nio;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.annotation.Retention;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -8,12 +11,11 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.*;
 import java.util.stream.Collectors;
+import javax.enterprise.context.ApplicationScoped;
 
 //ДЗ: создать обработчик команд
 //    ls -> вывести список файлов и каталогов,
@@ -22,7 +24,9 @@ import java.util.stream.Collectors;
 //    touch file -> создать пустой файл,
 //    используя  данный сервер.
 
-public class NioServer {
+
+@ApplicationScoped
+public class NioServer  {
 
    private final Path root;
    private  ServerSocketChannel server;
@@ -56,6 +60,25 @@ public class NioServer {
        }
    }
 
+    public static String match(String glob, String location) throws IOException {
+        StringBuilder result = new StringBuilder();
+        PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher(glob);
+        Files.walkFileTree(Paths.get(location), new SimpleFileVisitor<>() {
+
+            @Override
+            public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+                if (pathMatcher.matches(path)) {
+                    result.append(path.toString());
+                    return FileVisitResult.TERMINATE;
+                }
+                return FileVisitResult.CONTINUE;
+            }
+        });
+
+        return result.toString();
+    }
+
+
     private void handleRead(SelectionKey key) throws Exception {
         SocketChannel channel = (SocketChannel) key.channel();
         StringBuilder sb = new StringBuilder();
@@ -76,21 +99,47 @@ public class NioServer {
                 sb.append((char) buffer.get());
             }
             buffer.clear();
+
         }
         String result = sb.toString().trim();
-        if (result.toLowerCase().equals("ls")) {
-            String fileList = Files.list(root)
-                    .map(this::mapper)
-                    .collect(Collectors.joining("\n")) + "\n";
-            channel.write(ByteBuffer.wrap(fileList.getBytes(StandardCharsets.UTF_8)));
+
+        if (result.equalsIgnoreCase("ls")) {
+           readDir(channel);
         } else {
             channel.write(ByteBuffer.wrap("Unknown command. \n\r".getBytes(StandardCharsets.UTF_8)));
         }
-        if (result.toLowerCase().equals("cat".toLowerCase())) {
+        if (result.equalsIgnoreCase("cat")) {
+            channel.write(ByteBuffer.wrap("Please select a file to read. \n\r".getBytes(StandardCharsets.UTF_8)));
 
         }
-        channel.write(ByteBuffer.wrap(result.getBytes(StandardCharsets.UTF_8)));
 
+
+//            try {
+//
+//                Files.lines(path)
+//                        .filter(line -> line.startsWith(" "))
+//                        .forEach(System.out::println);
+//
+//            } catch (IOException ex) {
+//                ex.printStackTrace();
+//            }
+
+
+       // channel.write(ByteBuffer.wrap(result.getBytes(StandardCharsets.UTF_8)))
+
+    }
+
+    private void readDir(SocketChannel channel) throws IOException {
+        String fileList = null;
+        try {
+            fileList = Files.list(root)
+                    .map(this::mapper)
+                    .collect(Collectors.joining("\n")) + "\n";
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        assert fileList != null;
+        channel.write(ByteBuffer.wrap(fileList.getBytes(StandardCharsets.UTF_8)));
     }
 
     private String mapper (Path path) {

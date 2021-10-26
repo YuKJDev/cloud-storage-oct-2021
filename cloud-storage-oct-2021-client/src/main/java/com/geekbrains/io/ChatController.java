@@ -5,14 +5,11 @@ import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Locale;
 import java.util.ResourceBundle;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -68,10 +65,10 @@ public class ChatController implements Initializable {
         input.clear();
     }
 
-    private void sendFile(String fileName) {
+    private void put(String fileName) {
         try {
 
-            dos.writeUTF("upload");
+            dos.writeUTF("put");
             dos.writeUTF(fileName);
             File file = new File(File.separator +"root" + File.separator + fileName);
             if (!file.exists()) {
@@ -89,18 +86,22 @@ public class ChatController implements Initializable {
             }
             dos.flush();
             System.out.println(dis.readUTF());
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
 
-    private void getFile(String fileName){
+    private void get(String fileName){
 
         try{
-            dos.writeUTF("download");
+            dos.writeUTF("get");
             dos.writeUTF(fileName);
-            File file = new File( File.separator +"root" + File.separator + fileName);
+            Path path = Path.of(fileName);
+
+            File file = new File(File.pathSeparator);
+
             if (file.exists()) file.delete();
             file.createNewFile();
 
@@ -128,42 +129,33 @@ public class ChatController implements Initializable {
 
         final Stage dialogStage = new Stage();
         dialogStage.initModality(Modality.WINDOW_MODAL);
+        dialogStage.setHeight(300);
+        dialogStage.setWidth(200);
 
         Label exitLabel = new Label("Check a file");
-        exitLabel.setAlignment(Pos.BASELINE_CENTER);
         Button yesBtn = new Button("Open");
-        yesBtn.setOnAction(new EventHandler<ActionEvent>() {
-
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                String[] cmd = input.getText().toLowerCase().split(" ");
-
-                if (cmd[0].equals("upload")) {
-                    sendFile(cmd[1]);
-                }
-                if (cmd[0].equals("download")) {
-                    getFile(cmd[1]);
-                } else {
-                    try {
-                        sendMessage(a);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                input.setText("");
-
+        exitLabel.setAlignment(Pos.BASELINE_CENTER);
+        String[] cmd = input.getText().toLowerCase().split(" ");
+            if (cmd[0].equals("put")) {
+                yesBtn.setOnAction(actionEvent -> {
+                put(cmd[1]);
+            });
             }
-        });
+            if (cmd[0].equals("get")) {
+                if (!cmd[1].isEmpty())
+                get(cmd[1]);
+            } else {
+                try {
+                    sendMessage(a);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            input.setText("");
+
+
         Button noBtn = new Button("Cancel");
-        noBtn.setOnAction(new EventHandler<ActionEvent>() {
-
-            @Override
-            public void handle(ActionEvent arg0) {
-                dialogStage.close();
-
-            }
-
-        });
+        noBtn.setOnAction(arg0 -> dialogStage.close());
 
         HBox hBox = new HBox();
         hBox.setAlignment(Pos.BASELINE_CENTER);
